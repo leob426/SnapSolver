@@ -9,6 +9,7 @@
          - Increment the patch digit (e.g. 1.0.3 → 1.0.4)
          - Update SnapSolver.py with the new version
          - Update latest_version.txt
+         - Update SnapSolverVersionInfo.txt (FileVersion, ProductVersion) if it exists
          - Run PyInstaller to compile
          - Commit + push changes
          - Tag the commit (v1.0.4)
@@ -39,6 +40,9 @@ $patch = $match.Groups[3].Value
 
 Write-Host "Current version found: $major.$minor.$patch"
 
+# Store the old version (for reference if needed)
+$oldVersion = "$major.$minor.$patch"
+
 # 2) Increment the patch digit
 $patch = [int]$patch + 1
 $newVersion = "$major.$minor.$patch"
@@ -51,12 +55,16 @@ Set-Content SnapSolver.py $codeUpdated
 # 4) Update latest_version.txt
 Set-Content latest_version.txt $newVersion
 
-# (Optional) If you want to also update SnapSolverVersionInfo.txt, do similarly:
-# (But only do this if you want the .exe file properties to match automatically.)
-# $versionFile = Get-Content .\SnapSolverVersionInfo.txt -Raw
-# $versionFile = $versionFile -replace 'FileVersion\', '1.0.3', "FileVersion', '$newVersion'"
-# $versionFile = $versionFile -replace 'ProductVersion\', '1.0.3', "ProductVersion', '$newVersion'"
-# Set-Content SnapSolverVersionInfo.txt $versionFile
+# (NEW) If SnapSolverVersionInfo.txt exists, also update FileVersion/ProductVersion automatically
+if (Test-Path .\SnapSolverVersionInfo.txt) {
+    Write-Host "Updating SnapSolverVersionInfo.txt to $newVersion..."
+    $versionFile = Get-Content .\SnapSolverVersionInfo.txt -Raw
+    # We look for lines like: StringStruct('FileVersion', '1.0.3')
+    # Then replace the old version with the new one
+    $versionFile = $versionFile -replace "FileVersion', '$oldVersion", "FileVersion', '$newVersion"
+    $versionFile = $versionFile -replace "ProductVersion', '$oldVersion", "ProductVersion', '$newVersion"
+    Set-Content .\SnapSolverVersionInfo.txt $versionFile
+}
 
 # 5) Compile with PyInstaller
 Write-Host "Compiling SnapSolver with PyInstaller..."

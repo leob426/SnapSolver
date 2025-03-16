@@ -15,7 +15,7 @@ from tkinter.scrolledtext import ScrolledText
 ########################
 # (ADDED) Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.4"  # Update each time you release
+CURRENT_VERSION = "1.0.5"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver-latest.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -103,6 +103,12 @@ def download_update():
 
             # Rename new file to the main exe
             os.rename(new_file_path, current_exe_path)
+
+            # (NEW) Remove the .old after renaming, so only one EXE remains
+            try:
+                os.remove(backup_old)
+            except:
+                pass
 
             # Removed print statement to avoid console output
             subprocess.Popen([current_exe_path])
@@ -221,7 +227,7 @@ def create_window(root, title):
     """
     Create a new Toplevel window (400×340), black background,
     use SnapSolverIcon.ico if present, place the SnapSolver logo at the top,
-    and add a credits label: "A project by Leo and Mark".
+    and add a credits label: "A Project by Leo & Mark".
     """
     window = tk.Toplevel(root)
     window.title(title)
@@ -312,7 +318,7 @@ def get_api_key(root):
 
     tk.Button(
         win,
-        text="Enter Key",
+        text="Enter API Key",
         command=submit,
         font=("Segoe UI", 10, "bold"),
         bg="#4CAF50", fg="white",
@@ -554,5 +560,4 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
-
 
