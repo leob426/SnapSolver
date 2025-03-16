@@ -15,12 +15,10 @@ from tkinter.scrolledtext import ScrolledText
 ########################
 # (ADDED) Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.1"  # <--- Bump this whenever you release a new build
-
-# Point these at your actual GitHub repo and release links:
-UPDATE_VERSION_URL = "https://raw.githubusercontent.com/<USERNAME>/<REPO>/main/latest_version.txt"
-UPDATE_EXE_URL = "https://github.com/<USERNAME>/<REPO>/releases/latest/download/SnapSolver-latest.exe"
-EXE_NAME = "SnapSolver.exe"  # The name of your compiled EXE
+CURRENT_VERSION = "1.0.1"  # Update each time you release
+UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
+UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver-latest.exe"
+EXE_NAME = "SnapSolver.exe"
 
 ########################
 # 1) Paths for images/icons (PyInstaller logic)
