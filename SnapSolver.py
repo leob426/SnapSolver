@@ -51,10 +51,14 @@ def get_data_dir():
 ########################
 # (ADDED) Check for self-updates from GitHub
 ########################
-def check_for_updates(root):
+def check_for_updates():
     """
-    Compare CURRENT_VERSION to what's in the GitHub latest_version.txt.
-    If there's a new version, show a small popup and download the new EXE.
+    A simple example of a self-update check. This will:
+      1) Compare CURRENT_VERSION to what's in the GitHub latest_version.txt.
+      2) If a new version is found, it downloads the new .exe into the same folder.
+      3) Replaces the current executable, and restarts.
+
+    You'll need a valid GitHub file and release URL.
     """
     try:
         # Check latest version (raw content of latest_version.txt)
@@ -65,11 +69,7 @@ def check_for_updates(root):
 
         # If there's a new version, do the update
         if latest_version != CURRENT_VERSION:
-            # Optional small popup so user sees it's updating
-            messagebox.showinfo(
-                "SnapSolver Update",
-                f"Downloading new version {latest_version}...\n\nSnapSolver will restart automatically."
-            )
+            # Removed print statement to avoid console output
             download_update()
     except:
         pass  # If any error occurs, just skip update
@@ -88,6 +88,7 @@ def download_update():
                     if chunk:
                         f.write(chunk)
 
+            # On Windows, rename the current exe to .old, then rename the new one
             current_exe_path = os.path.join(os.path.dirname(sys.executable), EXE_NAME)
             backup_old = current_exe_path + ".old"
 
@@ -103,7 +104,7 @@ def download_update():
             # Rename new file to the main exe
             os.rename(new_file_path, current_exe_path)
 
-            # Relaunch new EXE, then exit old process
+            # Removed print statement to avoid console output
             subprocess.Popen([current_exe_path])
             sys.exit(0)
     except:
@@ -124,24 +125,28 @@ def single_instance_kill_others():
     lock_path = os.path.join(data_dir, 'SnapSolver.lock')
     my_pid = os.getpid()
 
+    # If there's an existing lock, try killing that old process
     if os.path.exists(lock_path):
         with open(lock_path, 'r', encoding='utf-8') as f:
             old_pid_str = f.read().strip()
         if old_pid_str.isdigit():
             old_pid = int(old_pid_str)
-            if old_pid != my_pid:
+            if old_pid != my_pid:  # Make sure it's not us!
                 if sys.platform.startswith('win'):
+                    # Windows approach with taskkill
                     cmd = f"taskkill /PID {old_pid} /F"
                     try:
                         subprocess.run(cmd, shell=True, timeout=3)
                     except:
                         pass
                 else:
+                    # macOS/Linux approach using os.kill
                     try:
                         os.kill(old_pid, 9)
                     except:
                         pass
 
+    # Now (re)write our PID to the lock file
     with open(lock_path, 'w', encoding='utf-8') as f:
         f.write(str(my_pid))
 
@@ -237,7 +242,7 @@ def create_window(root, title):
     # Credits label, right under the logo
     tk.Label(
         window,
-        text="A project by Leo and Mark",
+        text="A Project by Leo & Mark",
         fg="white",
         bg="#1e1e1e",
         font=("Segoe UI", 8, "italic")
@@ -329,7 +334,6 @@ def capture_screenshot():
     Capture a screenshot using Windows' Snipping Tool.
     Wait ~15 seconds for user to copy the snip to clipboard.
     """
-    # Clear clipboard first
     subprocess.run("powershell Set-Clipboard -Value $null", shell=True)
     time.sleep(0.3)
     pyautogui.hotkey('win', 'shift', 's')
@@ -519,7 +523,7 @@ def main_loop(root):
     """
     api_key = get_api_key(root)
     if not api_key:
-        # No API key, just exit silently
+        print("Exiting due to invalid API key.")
         return
 
     user_keybind = load_keybind()
@@ -536,21 +540,17 @@ def main_loop(root):
         time.sleep(1)
 
 if __name__ == "__main__":
-    # Create our hidden root first so we can show messageboxes if needed
+    # (ADDED) First check if there's a new version in GitHub and update if so
+    check_for_updates()
+
+    # Make sure only ONE instance runs; kill old if present.
+    single_instance_kill_others()
+
     root = tk.Tk()
     root.withdraw()
 
     if os.path.exists(ICON_PATH):
         root.iconbitmap(ICON_PATH)
 
-    # Check for updates with a valid Tk root, so we can show a messagebox
-    check_for_updates(root)
-
-    # Make sure only ONE instance runs; kill old if present
-    single_instance_kill_others()
-
-    # Start the main loop in a background thread
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
-
-    # Enter the Tk event loop
     root.mainloop()
