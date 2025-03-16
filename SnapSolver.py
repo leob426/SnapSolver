@@ -57,64 +57,77 @@ def check_for_updates():
       1) Compare CURRENT_VERSION to what's in the GitHub latest_version.txt.
       2) If a new version is found, it downloads the new .exe into the same folder.
       3) Replaces the current executable, and restarts.
-
-    You'll need a valid GitHub file and release URL.
     """
     try:
-        # Check latest version (raw content of latest_version.txt)
         r = requests.get(UPDATE_VERSION_URL, timeout=5)
         if r.status_code != 200:
-            return  # Can't retrieve version; skip updating
+            return
         latest_version = r.text.strip()
 
-        # If there's a new version, do the update
         if latest_version != CURRENT_VERSION:
-            # Removed print statement to avoid console output
             download_update()
     except:
-        pass  # If any error occurs, just skip update
+        pass
 
 def download_update():
     """
     Download the new EXE from GitHub, replace the current one, and restart.
+    This leaves only one SnapSolver.exe on disk.
     """
     try:
         r = requests.get(UPDATE_EXE_URL, timeout=10, stream=True)
         if r.status_code == 200:
-            # Write to a temporary file first
             new_file_path = os.path.join(os.path.dirname(sys.executable), "SnapSolver_new.exe")
             with open(new_file_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
 
-            # On Windows, rename the current exe to .old, then rename the new one
             current_exe_path = os.path.join(os.path.dirname(sys.executable), EXE_NAME)
             backup_old = current_exe_path + ".old"
 
             try:
-                # Remove old backup if it exists
                 if os.path.exists(backup_old):
                     os.remove(backup_old)
-                # Rename current to .old
                 os.rename(current_exe_path, backup_old)
             except:
                 pass
 
-            # Rename new file to the main exe
             os.rename(new_file_path, current_exe_path)
 
-            # (NEW) Remove the .old after renaming, so only one EXE remains
+            # Remove .old so only one EXE remains
             try:
                 os.remove(backup_old)
             except:
                 pass
 
-            # Removed print statement to avoid console output
             subprocess.Popen([current_exe_path])
             sys.exit(0)
     except:
         pass
+
+########################
+# (NEW) Interactive "Check for Update" function
+########################
+def check_for_updates_interactive(root):
+    """
+    Lets the user manually check for an update via a button.
+    Shows a popup if there's no update, or downloads if there's a new version.
+    """
+    try:
+        r = requests.get(UPDATE_VERSION_URL, timeout=5)
+        if r.status_code != 200:
+            messagebox.showinfo("SnapSolver Update", "Failed to check for updates. (Bad response)")
+            return
+
+        latest_version = r.text.strip()
+        if latest_version != CURRENT_VERSION:
+            messagebox.showinfo("SnapSolver Update", f"Downloading new version {latest_version} now...")
+            download_update()  # Reuses the same logic as auto-update
+        else:
+            messagebox.showinfo("SnapSolver Update", "You're already on the latest version.")
+    except:
+        messagebox.showinfo("SnapSolver Update", "Failed to check for updates. Please try again later.")
 
 ########################
 # NEW FUNCTION:
@@ -131,28 +144,24 @@ def single_instance_kill_others():
     lock_path = os.path.join(data_dir, 'SnapSolver.lock')
     my_pid = os.getpid()
 
-    # If there's an existing lock, try killing that old process
     if os.path.exists(lock_path):
         with open(lock_path, 'r', encoding='utf-8') as f:
             old_pid_str = f.read().strip()
         if old_pid_str.isdigit():
             old_pid = int(old_pid_str)
-            if old_pid != my_pid:  # Make sure it's not us!
+            if old_pid != my_pid:
                 if sys.platform.startswith('win'):
-                    # Windows approach with taskkill
                     cmd = f"taskkill /PID {old_pid} /F"
                     try:
                         subprocess.run(cmd, shell=True, timeout=3)
                     except:
                         pass
                 else:
-                    # macOS/Linux approach using os.kill
                     try:
                         os.kill(old_pid, 9)
                     except:
                         pass
 
-    # Now (re)write our PID to the lock file
     with open(lock_path, 'w', encoding='utf-8') as f:
         f.write(str(my_pid))
 
@@ -160,7 +169,6 @@ def single_instance_kill_others():
 # 3) Existing logic for loading/saving the API key
 ########################
 def load_api_key():
-    """Load the API key from the user SnapSolver folder (api_key.txt)."""
     data_dir = get_data_dir()
     path = os.path.join(data_dir, 'api_key.txt')
     if os.path.exists(path):
@@ -169,7 +177,6 @@ def load_api_key():
     return None
 
 def save_api_key(key):
-    """Save the API key if valid; otherwise return False."""
     if validate_api_key(key):
         data_dir = get_data_dir()
         path = os.path.join(data_dir, 'api_key.txt')
@@ -179,7 +186,6 @@ def save_api_key(key):
     return False
 
 def validate_api_key(api_key):
-    """Check an API key by calling OpenAI's /v1/models endpoint."""
     try:
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         response = requests.get("https://api.openai.com/v1/models", headers=headers, timeout=5)
@@ -191,10 +197,6 @@ def validate_api_key(api_key):
 # 4) Existing logic for loading/saving the keybind
 ########################
 def load_keybind():
-    """
-    Load the user-defined keybind from keybind.txt in the SnapSolver folder.
-    Default to 'backslash' if not found or empty.
-    """
     data_dir = get_data_dir()
     path = os.path.join(data_dir, 'keybind.txt')
     if os.path.exists(path):
@@ -202,10 +204,9 @@ def load_keybind():
             kb = f.read().strip()
             if kb:
                 return kb
-    return 'backslash'  # fallback
+    return 'backslash'
 
 def save_keybind(new_kb):
-    """Save the new keybind to keybind.txt in the SnapSolver folder."""
     data_dir = get_data_dir()
     path = os.path.join(data_dir, 'keybind.txt')
     with open(path, 'w', encoding='utf-8') as f:
@@ -215,7 +216,6 @@ def save_keybind(new_kb):
 # 5) The rest of your SnapSolver code
 ########################
 def load_logo():
-    """Load SnapSolverLogo.png from LOGO_PATH, resize to 140×140, return a Tk PhotoImage."""
     try:
         img = Image.open(LOGO_PATH)
         img = img.resize((140, 140), Image.LANCZOS)
@@ -224,11 +224,6 @@ def load_logo():
         return None
 
 def create_window(root, title):
-    """
-    Create a new Toplevel window (400×340), black background,
-    use SnapSolverIcon.ico if present, place the SnapSolver logo at the top,
-    and add a credits label: "A Project by Leo & Mark".
-    """
     window = tk.Toplevel(root)
     window.title(title)
     window.geometry("400x340")
@@ -238,14 +233,12 @@ def create_window(root, title):
     if os.path.exists(ICON_PATH):
         window.iconbitmap(ICON_PATH)
 
-    # SnapSolver logo
     logo = load_logo()
     if logo:
         logo_label = tk.Label(window, image=logo, bg="#1e1e1e")
         logo_label.image = logo
         logo_label.pack(pady=5)
 
-    # Credits label, right under the logo
     tk.Label(
         window,
         text="A Project by Leo & Mark",
@@ -257,7 +250,6 @@ def create_window(root, title):
     return window, logo
 
 def show_message(title, message, root):
-    """Show a 400×350 popup with black background, SnapSolver logo, and an OK button."""
     popup, _ = create_window(root, title)
 
     tk.Label(
@@ -288,10 +280,6 @@ def show_message(title, message, root):
     popup.wait_window()
 
 def get_api_key(root):
-    """
-    If there's no valid API key, show a black window for key entry.
-    Return the validated key or None.
-    """
     api_key = load_api_key()
     if api_key and validate_api_key(api_key):
         return api_key
@@ -336,10 +324,6 @@ def get_api_key(root):
     return load_api_key()
 
 def capture_screenshot():
-    """
-    Capture a screenshot using Windows' Snipping Tool.
-    Wait ~15 seconds for user to copy the snip to clipboard.
-    """
     subprocess.run("powershell Set-Clipboard -Value $null", shell=True)
     time.sleep(0.3)
     pyautogui.hotkey('win', 'shift', 's')
@@ -352,7 +336,6 @@ def capture_screenshot():
     return None
 
 def image_to_base64(image):
-    """Convert a PIL image to base64 for sending to GPT."""
     from io import BytesIO
     import base64
     buffer = BytesIO()
@@ -360,9 +343,6 @@ def image_to_base64(image):
     return base64.b64encode(buffer.getvalue()).decode()
 
 def ask_chatgpt_with_image(image, api_key):
-    """
-    Send the screenshot + minimal instructions to GPT, returning textual answer.
-    """
     base64_image = image_to_base64(image)
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     data = {
@@ -386,10 +366,6 @@ def ask_chatgpt_with_image(image, api_key):
         return f"API Error: {str(e)}"
 
 def show_answer_window(answer, root):
-    """
-    Show a 400×320 window with black background, SnapSolver logo + credits,
-    a label, a scrolled text for the answer, and an "OK" button pinned at the bottom.
-    """
     window, _ = create_window(root, "SnapSolver Result")
 
     content_frame = tk.Frame(window, bg="#1e1e1e")
@@ -478,13 +454,21 @@ def show_ready_window(root, keybind):
         width=12
     ).pack(side="left", padx=5)
 
+    # (NEW) Check for Update button
+    tk.Button(
+        btn_frame,
+        text="Check for Update",
+        command=lambda: check_for_updates_interactive(root),
+        font=("Segoe UI", 10, "bold"),
+        bg="#FFC107", fg="white",
+        relief="flat",
+        width=14
+    ).pack(side="left", padx=5)
+
     popup.grab_set()
     popup.wait_window()
 
 def change_keybind_window(root, parent_window):
-    """
-    Small window to let the user change the keybind (saved in SnapSolver folder).
-    """
     parent_window.withdraw()
     kb_win, _ = create_window(root, "Change Keybind")
 
@@ -520,13 +504,6 @@ def change_keybind_window(root, parent_window):
     parent_window.deiconify()
 
 def main_loop(root):
-    """
-    Main loop:
-      1) Load or request a valid API key
-      2) Load user keybind from the SnapSolver folder
-      3) Show "SnapSolver Ready" popup (with option to change keybind)
-      4) Wait for keybind press, capture screenshot, ask GPT, display result
-    """
     api_key = get_api_key(root)
     if not api_key:
         print("Exiting due to invalid API key.")
@@ -536,7 +513,6 @@ def main_loop(root):
     show_ready_window(root, user_keybind)
 
     while True:
-        # Reload the keybind each iteration so changes apply instantly
         user_keybind = load_keybind()
         keyboard.wait(user_keybind)
         screenshot = capture_screenshot()
@@ -546,10 +522,9 @@ def main_loop(root):
         time.sleep(1)
 
 if __name__ == "__main__":
-    # (ADDED) First check if there's a new version in GitHub and update if so
+    # Automatic check for updates at launch
     check_for_updates()
 
-    # Make sure only ONE instance runs; kill old if present.
     single_instance_kill_others()
 
     root = tk.Tk()
