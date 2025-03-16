@@ -15,7 +15,7 @@ from tkinter.scrolledtext import ScrolledText
 ########################
 # (ADDED) Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.3"  # Update each time you release
+CURRENT_VERSION = "1.0.2"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver-latest.exe"
 EXE_NAME = "SnapSolver.exe"
