@@ -7,15 +7,19 @@ import os
 import sys
 import webbrowser
 import threading
+import logging
 from PIL import ImageGrab, Image, ImageTk
 import tkinter as tk
 from tkinter import messagebox
 from tkinter.scrolledtext import ScrolledText
 
+# Configure logging for debugging update process
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 ########################
 # (ADDED) Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.8"  # Update each time you release
+CURRENT_VERSION = "1.0.9"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver-latest.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -49,32 +53,35 @@ def get_data_dir():
     return folder
 
 ########################
-# (ADDED) Check for self-updates from GitHub
+# (UPDATED) Check for self-updates from GitHub
 ########################
 def check_for_updates():
     """
-    A simple example of a self-update check. This will:
-      1) Compare CURRENT_VERSION to what's in the GitHub latest_version.txt.
-      2) If a new version is found, it downloads the new .exe into the same folder.
-      3) Replaces the current executable, and restarts.
+    Checks for updates by comparing CURRENT_VERSION to the GitHub latest_version.txt.
+    If a new version is found, it downloads the new .exe, replaces the current one, and restarts.
     """
     try:
-        r = requests.get(UPDATE_VERSION_URL, timeout=5)
+        logging.info("Checking for updates...")
+        params = {'cb': str(os.getpid())}  # Cache buster to avoid stale responses
+        r = requests.get(UPDATE_VERSION_URL, params=params, timeout=5)
         if r.status_code != 200:
+            logging.error("Failed to fetch latest version info. Status code: %s", r.status_code)
             return
         latest_version = r.text.strip()
-
+        logging.info("Current version: %s, Latest version: %s", CURRENT_VERSION, latest_version)
         if latest_version != CURRENT_VERSION:
+            logging.info("New version available. Initiating update...")
             download_update()
-    except:
-        pass
+    except Exception as e:
+        logging.error("Error checking for updates: %s", e)
 
 def download_update():
     """
-    Download the new EXE from GitHub, replace the current one, and restart.
-    This leaves only one SnapSolver.exe on disk.
+    Downloads the new EXE from GitHub, replaces the current one, and restarts the application.
+    Only one SnapSolver.exe remains on disk after updating.
     """
     try:
+        logging.info("Downloading update from %s", UPDATE_EXE_URL)
         r = requests.get(UPDATE_EXE_URL, timeout=10, stream=True)
         if r.status_code == 200:
             new_file_path = os.path.join(os.path.dirname(sys.executable), "SnapSolver_new.exe")
@@ -82,7 +89,6 @@ def download_update():
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-
             current_exe_path = os.path.join(os.path.dirname(sys.executable), EXE_NAME)
             backup_old = current_exe_path + ".old"
 
@@ -90,55 +96,63 @@ def download_update():
                 if os.path.exists(backup_old):
                     os.remove(backup_old)
                 os.rename(current_exe_path, backup_old)
-            except:
-                pass
+                logging.info("Backed up old version to %s", backup_old)
+            except Exception as e:
+                logging.error("Error backing up old version: %s", e)
 
             os.rename(new_file_path, current_exe_path)
+            logging.info("Update downloaded and installed successfully.")
 
-            # Remove .old so only one EXE remains
+            # Optionally remove the backup so only one EXE remains
             try:
                 os.remove(backup_old)
-            except:
-                pass
+                logging.info("Removed backup file.")
+            except Exception as e:
+                logging.warning("Could not remove backup file: %s", e)
 
             subprocess.Popen([current_exe_path])
             sys.exit(0)
-    except:
-        pass
+        else:
+            logging.error("Failed to download update. Status code: %s", r.status_code)
+    except Exception as e:
+        logging.error("Error during update download: %s", e)
 
 ########################
-# (NEW) Interactive "Check for Update" function
+# (UPDATED) Interactive "Check for Update" function
 ########################
 def check_for_updates_interactive(root):
     """
-    Lets the user manually check for an update via a button.
-    Shows a popup if there's no update, or downloads if there's a new version.
+    Allows the user to manually check for updates via a button.
+    Displays a popup if there's no update, or downloads if a new version is available.
     """
     try:
-        r = requests.get(UPDATE_VERSION_URL, timeout=5)
+        logging.info("Interactive update check initiated.")
+        params = {'cb': str(os.getpid())}  # Cache buster
+        r = requests.get(UPDATE_VERSION_URL, params=params, timeout=5)
         if r.status_code != 200:
             messagebox.showinfo("SnapSolver Update", "Failed to check for updates. (Bad response)")
+            logging.error("Interactive update check: Bad response. Status code: %s", r.status_code)
             return
-
         latest_version = r.text.strip()
         if latest_version != CURRENT_VERSION:
             messagebox.showinfo("SnapSolver Update", f"Downloading new version {latest_version} now...")
+            logging.info("Interactive update: New version %s found.", latest_version)
             download_update()  # Reuses the same logic as auto-update
         else:
             messagebox.showinfo("SnapSolver Update", "You're already on the latest version.")
-    except:
+            logging.info("Interactive update: Already on latest version.")
+    except Exception as e:
         messagebox.showinfo("SnapSolver Update", "Failed to check for updates. Please try again later.")
+        logging.error("Error during interactive update check: %s", e)
 
 ########################
-# NEW FUNCTION:
-# Kill any old SnapSolver instance so only the newest remains
+# (NEW) Kill any old SnapSolver instance so only the newest remains
 ########################
 def single_instance_kill_others():
     """
-    Checks if there's a SnapSolver.lock file in the data folder,
-    which stores an old PID. If found, kills that process.
-    Then writes our own PID. If user runs SnapSolver multiple times,
-    each new instance kills the old one and takes over.
+    Checks if there's a SnapSolver.lock file in the data folder, which stores an old PID.
+    If found, kills that process. Then writes the current PID.
+    Each new instance kills the old one and takes over.
     """
     data_dir = get_data_dir()
     lock_path = os.path.join(data_dir, 'SnapSolver.lock')
@@ -154,16 +168,17 @@ def single_instance_kill_others():
                     cmd = f"taskkill /PID {old_pid} /F"
                     try:
                         subprocess.run(cmd, shell=True, timeout=3)
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.warning("Failed to kill old process on Windows: %s", e)
                 else:
                     try:
                         os.kill(old_pid, 9)
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.warning("Failed to kill old process on Unix: %s", e)
 
     with open(lock_path, 'w', encoding='utf-8') as f:
         f.write(str(my_pid))
+    logging.info("Current process PID %s written to lock file.", my_pid)
 
 ########################
 # 3) Existing logic for loading/saving the API key
@@ -220,7 +235,8 @@ def load_logo():
         img = Image.open(LOGO_PATH)
         img = img.resize((140, 140), Image.LANCZOS)
         return ImageTk.PhotoImage(img)
-    except:
+    except Exception as e:
+        logging.error("Error loading logo: %s", e)
         return None
 
 def create_window(root, title):
@@ -408,8 +424,8 @@ def show_answer_window(answer, root):
 
 def show_ready_window(root, keybind):
     """
-    Show the "SnapSolver Ready" window with the user’s current keybind,
-    plus an option to change it. (Contains credits label from create_window.)
+    Displays the "SnapSolver Ready" window with the user’s current keybind,
+    an option to change it, and a button to check for updates.
     """
     popup, _ = create_window(root, "SnapSolver Ready")
 
@@ -454,7 +470,7 @@ def show_ready_window(root, keybind):
         width=12
     ).pack(side="left", padx=5)
 
-    # (NEW) Check for Update button
+    # Check for Update button
     tk.Button(
         btn_frame,
         text="Check for Update",
@@ -506,6 +522,7 @@ def change_keybind_window(root, parent_window):
 def main_loop(root):
     api_key = get_api_key(root)
     if not api_key:
+        logging.error("Exiting due to invalid API key.")
         print("Exiting due to invalid API key.")
         return
 
@@ -535,7 +552,4 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
-
-
-
 
