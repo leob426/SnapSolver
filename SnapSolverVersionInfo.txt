@@ -1,6 +1,6 @@
 VSVersionInfo(
     ffi=FixedFileInfo(
-        filevers=(1, 0, 4, 0),      # (Major, Minor, Patch, 0)
+        filevers=(1, 0, 4, 0),    # Will be auto-updated to (1,0,5,0) if you run the script
         prodvers=(1, 0, 4, 0),
         mask=0x3f,
         flags=0x0,
@@ -16,16 +16,15 @@ VSVersionInfo(
                 [
                     StringStruct('CompanyName', 'SnapSolver'),
                     StringStruct('FileDescription', 'SnapSolver Application'),
-                    $11.0.6'),
+                    $11.0.7'),
                     StringStruct('InternalName', 'SnapSolver'),
                     StringStruct('OriginalFilename', 'SnapSolver.exe'),
                     StringStruct('ProductName', 'SnapSolver'),
-                    $11.0.6')
+                    $11.0.7')
                 ]
             )
         ]),
         VarFileInfo([VarStruct('Translation', [1033, 1200])])
     ]
 )
-
 
