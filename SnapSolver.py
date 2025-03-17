@@ -16,7 +16,7 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.3"  # Update each time you release
+CURRENT_VERSION = "1.0.4"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -297,7 +297,7 @@ def show_message(title, message, root):
 
     tk.Button(
         popup,
-        text="OK",
+        text="Ok",
         command=popup.destroy,
         font=("Segoe UI", 10, "bold"),
         bg="#4CAF50", fg="white",
@@ -313,7 +313,7 @@ def get_api_key(root):
         return api_key
 
     root.withdraw()
-    win, _ = create_window(root, "SnapSolver Key Entry")
+    win, _ = create_window(root, "SnapSolver Key")
 
     tk.Label(
         win,
@@ -569,6 +569,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
