@@ -16,11 +16,11 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.6"  # Update each time you release
+CURRENT_VERSION = "1.0.14"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
-UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver-latest.exe"
+UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver_latest.exe"
 EXE_NAME = "SnapSolver.exe"
-
+NEW_EXE_NAME = "SnapSolver_new.exe"
 ########################
 # 1) Paths for images/icons (PyInstaller logic)
 ########################
@@ -376,7 +376,7 @@ def ask_chatgpt_with_image(image, api_key):
     data = {
         "model": "gpt-4o",
         "messages": [
-            {"role": "system", "content": "Answer clearly from image."},
+            {"role": "system", "content": "Answer clearly and correctly from image."},
             {
                 "role": "user",
                 "content": [
@@ -404,7 +404,7 @@ def show_answer_window(answer, root):
 
     tk.Label(
         content_frame,
-        text="The Answers below are accurate:",
+        text="The Answers are Below:",
         fg="white", bg="#1e1e1e",
         font=("Segoe UI", 14, "bold")
     ).grid(row=0, column=0, pady=(0,5), padx=10, sticky="w")
@@ -423,7 +423,7 @@ def show_answer_window(answer, root):
 
     ok_button = tk.Button(
         content_frame,
-        text="OK",
+        text="Ok",
         command=window.destroy,
         font=("Segoe UI", 10, "bold"),
         bg="#4CAF50", fg="white",
@@ -448,7 +448,7 @@ def show_ready_window(root, keybind):
         font=("Segoe UI", 14, "bold")
     ).pack(pady=5)
 
-    message = f"✅ Press '{keybind}' to capture screenshots."
+    message = f"Press '{keybind}' to capture screenshots."
     tk.Label(
         popup,
         text=message,
@@ -463,7 +463,7 @@ def show_ready_window(root, keybind):
     # OK button
     tk.Button(
         btn_frame,
-        text="OK",
+        text="Ok",
         command=popup.destroy,
         font=("Segoe UI", 10, "bold"),
         bg="#4CAF50", fg="white",
@@ -569,6 +569,16 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
+
+
+
+
+
+
+
+
+
 
 
 
