@@ -16,7 +16,7 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.12"  # Update each time you release
+CURRENT_VERSION = "1.0.13"  # Update each time you release
 UPDATE_VERSION_URL = "https://github.com/leob426/SnapSolver/blob/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver_latest.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -569,6 +569,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
