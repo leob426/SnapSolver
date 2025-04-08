@@ -16,11 +16,12 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.13"  # Update each time you release
+CURRENT_VERSION = "1.0.14"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver.exe"
 EXE_NAME = "SnapSolver.exe"
 NEW_EXE_NAME = "SnapSolver_new.exe"
+UPDATER_NAME = "SnapSolverUpdater.exe"
 ########################
 # 1) Paths for images/icons (PyInstaller logic)
 ########################
@@ -53,10 +54,6 @@ def get_data_dir():
 # Check for self-updates from GitHub
 ########################
 def check_for_updates():
-    """
-    Checks for an update by comparing CURRENT_VERSION to what's in GitHub's latest_version.txt.
-    If a new version is found, downloads the new .exe, replaces the current executable, and restarts.
-    """
     try:
         params = {'cb': str(os.getpid())}  # Cache buster to avoid cached responses
         r = requests.get(UPDATE_VERSION_URL, timeout=5, params=params)
@@ -75,57 +72,36 @@ def check_for_updates():
         logging.error("Error checking for updates: %s", e)
 
 def download_update():
-    """
-    Downloads the new EXE from GitHub, replaces the current one, and restarts the application.
-    """
     try:
         logging.info("Downloading update from: %s", UPDATE_EXE_URL)
         r = requests.get(UPDATE_EXE_URL, timeout=10, stream=True)
         if r.status_code == 200:
-            new_file_path = os.path.join(os.path.dirname(sys.executable), "SnapSolver_new.exe")
+            exe_dir = os.path.dirname(sys.executable)
+            new_file_path = os.path.join(exe_dir, NEW_EXE_NAME)
             with open(new_file_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
             logging.info("Update downloaded to temporary file: %s", new_file_path)
 
-            current_exe_path = os.path.join(os.path.dirname(sys.executable), EXE_NAME)
-            backup_old = current_exe_path + ".old"
-            try:
-                if os.path.exists(backup_old):
-                    os.remove(backup_old)
-                    logging.info("Removed old backup file: %s", backup_old)
-                os.rename(current_exe_path, backup_old)
-                logging.info("Backed up current exe to: %s", backup_old)
-            except Exception as e:
-                logging.error("Error backing up current exe: %s", e)
+            updater_path = os.path.join(exe_dir, UPDATER_NAME)
+            if not os.path.exists(updater_path):
+                logging.error("Updater executable not found: %s", updater_path)
+                return
 
-            os.rename(new_file_path, current_exe_path)
-            logging.info("Replaced current exe with new version.")
-
-            # Optionally remove the backup so only one exe remains
-            try:
-                os.remove(backup_old)
-                logging.info("Removed backup file: %s", backup_old)
-            except Exception as e:
-                logging.warning("Could not remove backup file: %s", e)
-
-            logging.info("Restarting application with updated version.")
-            subprocess.Popen([current_exe_path])
+            logging.info("Launching updater to replace executable and restart.")
+            subprocess.Popen([updater_path, sys.executable, new_file_path])
             sys.exit(0)
         else:
             logging.error("Failed to download update: status code %s", r.status_code)
     except Exception as e:
         logging.error("Error during update download: %s", e)
 
+
 ########################
 # Interactive "Check for Update" function
 ########################
 def check_for_updates_interactive(root):
-    """
-    Lets the user manually check for an update via a button.
-    Shows a popup if there's no update, or downloads the new version if an update is available.
-    """
     try:
         params = {'cb': str(os.getpid())}
         r = requests.get(UPDATE_VERSION_URL, timeout=5, params=params)
@@ -571,6 +547,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
