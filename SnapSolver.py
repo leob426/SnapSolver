@@ -16,7 +16,7 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.17"  # Update each time you release
+CURRENT_VERSION = "1.0.18"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -241,7 +241,7 @@ def load_logo():
 def create_window(root, title):
     window = tk.Toplevel(root)
     window.title(title)
-    window.geometry("450x400")
+    window.geometry("400x350")
     window.configure(bg="#1e1e1e")
     window.resizable(False, False)
 
@@ -557,6 +557,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
