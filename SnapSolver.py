@@ -16,7 +16,7 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.16"  # Update each time you release
+CURRENT_VERSION = "1.0.17"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -241,7 +241,7 @@ def load_logo():
 def create_window(root, title):
     window = tk.Toplevel(root)
     window.title(title)
-    window.geometry("500x750")
+    window.geometry("450x400")
     window.configure(bg="#1e1e1e")
     window.resizable(False, False)
 
@@ -288,7 +288,7 @@ def show_message(title, message, root):
         text="Ok",
         command=popup.destroy,
         font=("Segoe UI", 10, "bold"),
-        bg="#4CAF50", fg="white",
+        bg="#4f4f4f", fg="white",
         relief="flat"
     ).pack(pady=15)
 
@@ -306,7 +306,7 @@ def get_api_key(root):
     tk.Label(
         win,
         text="Enter OpenAI API Key",
-        fg="white", bg="#1e1e1e",
+        fg="white", bg="#4f4f4f",
         font=("Segoe UI", 14, "bold")
     ).pack(pady=5)
 
@@ -325,7 +325,7 @@ def get_api_key(root):
         text="Enter API Key",
         command=submit,
         font=("Segoe UI", 10, "bold"),
-        bg="#4CAF50", fg="white",
+        bg="#4f4f4f", fg="white",
         relief="flat"
     ).pack(pady=5)
 
@@ -414,7 +414,7 @@ def show_answer_window(answer, root):
         text="Ok",
         command=window.destroy,
         font=("Segoe UI", 10, "bold"),
-        bg="#4CAF50", fg="white",
+        bg="#4f4f4f", fg="white",
         relief="flat"
     )
     ok_button.grid(row=2, column=0, pady=10)
@@ -454,7 +454,7 @@ def show_ready_window(root, keybind):
         text="Ok",
         command=popup.destroy,
         font=("Segoe UI", 10, "bold"),
-        bg="#4CAF50", fg="white",
+        bg="#4f4f4f", fg="white",
         relief="flat",
         width=12
     ).pack(side="left", padx=5)
@@ -465,7 +465,7 @@ def show_ready_window(root, keybind):
         text="Change Keybind",
         command=lambda: change_keybind_window(root, popup),
         font=("Segoe UI", 10, "bold"),
-        bg="#2196F3", fg="white",
+        bg="#4f4f4f", fg="white",
         relief="flat",
         width=12
     ).pack(side="left", padx=5)
@@ -476,7 +476,7 @@ def show_ready_window(root, keybind):
         text="Check for Update",
         command=lambda: check_for_updates_interactive(root),
         font=("Segoe UI", 10, "bold"),
-        bg="#FFC107", fg="white",
+        bg="#4f4f4f", fg="white",
         relief="flat",
         width=14
     ).pack(side="left", padx=5)
@@ -557,6 +557,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
