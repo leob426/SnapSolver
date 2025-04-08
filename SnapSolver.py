@@ -16,7 +16,7 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.15"  # Update each time you release
+CURRENT_VERSION = "1.0.16"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -75,27 +75,37 @@ def download_update():
     try:
         logging.info("Downloading update from: %s", UPDATE_EXE_URL)
         r = requests.get(UPDATE_EXE_URL, timeout=10, stream=True)
-        if r.status_code == 200:
-            exe_dir = os.path.dirname(sys.executable)
-            new_file_path = os.path.join(exe_dir, NEW_EXE_NAME)
-            with open(new_file_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-            logging.info("Update downloaded to temporary file: %s", new_file_path)
+        if r.status_code != 200:
+            logging.error("Failed to download update: %s", r.status_code)
+            messagebox.showerror("SnapSolver Update", f"Failed to download update (HTTP {r.status_code})")
+            return
 
-            updater_path = os.path.join(exe_dir, UPDATER_NAME)
-            if not os.path.exists(updater_path):
-                logging.error("Updater executable not found: %s", updater_path)
-                return
+        exe_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+        new_file_path = os.path.join(exe_dir, NEW_EXE_NAME)
+        current_file_path = sys.executable
+        updater_path = os.path.join(exe_dir, UPDATER_NAME)
 
-            logging.info("Launching updater to replace executable and restart.")
-            subprocess.Popen([updater_path, sys.executable, new_file_path])
-            sys.exit(0)
-        else:
-            logging.error("Failed to download update: status code %s", r.status_code)
+        with open(new_file_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        logging.info("Downloaded new executable to: %s", new_file_path)
+
+        if not os.path.exists(updater_path):
+            logging.error("Updater not found: %s", updater_path)
+            messagebox.showerror("SnapSolver Update", f"Updater not found: {UPDATER_NAME}")
+            return
+
+        logging.info("Launching updater to install the new version.")
+        subprocess.Popen([updater_path, current_file_path, new_file_path])
+
+        # Exit current application so updater can replace it
+        sys.exit(0)
+
     except Exception as e:
-        logging.error("Error during update download: %s", e)
+        logging.error("Error during update: %s", e)
+        messagebox.showerror("SnapSolver Update", f"Update failed:\n{e}")
 
 
 ########################
@@ -547,6 +557,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
