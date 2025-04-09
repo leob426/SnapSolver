@@ -16,7 +16,7 @@ import logging
 ########################
 # Self-update constants/variables
 ########################
-CURRENT_VERSION = "1.0.18"  # Update each time you release
+CURRENT_VERSION = "1.0.19"  # Update each time you release
 UPDATE_VERSION_URL = "https://raw.githubusercontent.com/leob426/SnapSolver/main/latest_version.txt"
 UPDATE_EXE_URL = "https://github.com/leob426/SnapSolver/releases/latest/download/SnapSolver.exe"
 EXE_NAME = "SnapSolver.exe"
@@ -241,7 +241,7 @@ def load_logo():
 def create_window(root, title):
     window = tk.Toplevel(root)
     window.title(title)
-    window.geometry("400x350")
+    window.geometry("400x400")
     window.configure(bg="#1e1e1e")
     window.resizable(False, False)
 
@@ -249,10 +249,19 @@ def create_window(root, title):
         window.iconbitmap(ICON_PATH)
 
     # Add header with current version info to all windows
-    header_frame = tk.Frame(window, bg="#1e1e1e")
-    header_frame.pack(pady=5)
-    header_label = tk.Label(header_frame, text=f"SnapSolver v{CURRENT_VERSION} by Leo & Mark", fg="white", bg="#1e1e1e", font=("Segoe UI", 10, "bold"))
-    header_label.pack()
+    spacer = tk.Frame(window, height=20, bg="#1e1e1e")
+    spacer.pack(side="bottom", fill="x", expand=True)
+
+    footer_frame = tk.Frame(window, bg="#1e1e1e")
+    footer_frame.pack(side="bottom", fill="x", pady=10)
+
+    footer_label = tk.Label(footer_frame,text=f"SnapSolver v{CURRENT_VERSION} by Leo & Mark",
+    fg="white", bg="#1e1e1e",
+    font=("Segoe UI", 10, "bold"),
+    anchor="center",
+    justify="center"
+    )
+    footer_label.pack()
 
     # Load and display the logo if available
     logo = load_logo()
@@ -557,6 +566,7 @@ if __name__ == "__main__":
 
     threading.Thread(target=main_loop, args=(root,), daemon=True).start()
     root.mainloop()
+
 
 
 
